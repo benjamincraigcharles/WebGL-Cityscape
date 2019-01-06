@@ -1,3 +1,6 @@
+/**
+ * Created by gleicher on 10/17/15.
+ */
 var grobjects = grobjects || [];
 
 // make the two constructors global variables so they can be used later

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Graphics Town - Benjamin Charles</title>
+</head>
+<body>
+<script src="Libraries/twgl-full.js"></script>
+<script src="Libraries/panel.js"></script>
+<script src="Libraries/arcball.js"></script>
+<script src="grobject.js"></script>
+<script src="Models/Fountain.js"></script>
+<script src="Models/Hospital.js"></script>
+<script src="Models/Ocean.js"></script>
+<script src="Models/Path.js"></script>
+<script src="Models/Landscape.js"></script>
+<script src="Models/CityBackground.js"></script>
+<script src="Models/GrassBackground.js"></script>
+<script src="Models/Ambulance.js"></script>
+<script src="Models/Skyscraper.js"></script>
+<script src="Models/PorchLight.js"></script>
+<script src="Models/Car.js"></script>
+<script src="Models/Streetlight.js"></script>
+<script src="Models/House.js"></script>
+<script src="Models/Helicopter.js"></script>
+<script src="Models/Road.js"></script>
+<script src="Models/Skybox.js"></script>
+<script src="graphicstown.js"></script>
+
+
+</body>
+<script id="streetlight-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+
+    varying vec3 outColor;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 lightcolor;
+    uniform float light;
+    uniform float tod;
+
+    void main(void) {
+        mat4 modelView = view * model;
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec3 t_normal = normalize(mat3(view * model) * vnormal);
+        float diffuse;
+        if(tod < 12.0 || tod > 36.0) {
+            if(light == 1.0) { diffuse = 0.8; }
+            else { diffuse = 0.3; }
+        } else { diffuse = .5 + .5*abs(dot(t_normal, lightdir)); }
+        outColor = lightcolor * diffuse;
+    }
+</script>
+<script id="streetlight-fs" type="notjs">
+    precision highp float;
+    varying vec3 outColor;
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+<script id="light-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+
+    varying vec3 outColor;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 lightcolor;
+    uniform float tod;
+    uniform float light;
+
+    void main(void) {
+        mat4 modelView = view * model;
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec3 t_normal = normalize(mat3(view * model) * vnormal);
+        float diffuse;
+        if(tod < 12.0 || tod > 36.0) {
+            if(light == 1.0) { diffuse = .85 + .5*abs(dot(t_normal, lightdir)); }
+            else { diffuse = .5 + .5*abs(dot(t_normal, lightdir)); }
+        } else { diffuse = .5 + .5*abs(dot(t_normal, lightdir)); }
+        outColor = lightcolor * diffuse;
+    }
+</script>
+<script id="light-fs" type="notjs">
+    precision highp float;
+    varying vec3 outColor;
+
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+<script id="car-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+
+    varying vec3 outColor;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 lightcolor;
+    uniform float tod;
+    uniform float light;
+
+    void main(void) {
+        mat4 modelView = view * model;
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec3 t_normal = normalize(mat3(view * model) * vnormal);
+        float diffuse;
+        if(tod < 12.0 || tod > 36.0) {
+            if(light == 1.0) { diffuse = 0.8; }
+            else { diffuse = 0.3; }
+        } else { diffuse = .5 + .5*abs(dot(t_normal, lightdir)); }
+        outColor = lightcolor * diffuse;
+    }
+</script>
+<script id="car-fs" type="notjs">
+    precision highp float;
+    varying vec3 outColor;
+
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+<script id="bumpMap-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 v_position;
+    attribute vec3 v_normal;
+    attribute vec2 v_texture;
+    attribute vec3 v_tangent;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform mat4 norm;
+    uniform vec3 lightdir;
+
+    varying vec2 f_texture;
+    varying vec3 f_lightdir;
+    varying vec3 f_eyedir;
+
+    void main(void) {
+       mat4 MV = view * model;
+       vec4 vertex = MV * vec4(v_position, 1.0);
+       vec3 normal = vec3(norm * vec4(v_normal, 1.0));
+       vec3 tangent = vec3(norm * vec4(v_tangent, 1.0));
+       vec3 bitangent = cross(normal, tangent);
+       mat3 TBN = mat3(
+            tangent.x, bitangent.x, normal.x,
+            tangent.y, bitangent.y, normal.y,
+            tangent.z, bitangent.z, normal.z
+       );
+       vec3 eyedir = -vertex.xyz;
+       gl_Position = proj * MV * vec4(v_position, 1.0);
+       f_texture = v_texture;
+       f_lightdir = lightdir * TBN;
+       f_eyedir = eyedir * TBN;
+    }
+</script>
+<script id="bumpMap-fs" type="notjs">
+    precision highp float;
+
+    uniform sampler2D t_sample;
+    uniform sampler2D t_sample_norm;
+    uniform vec4 light_a;
+    uniform vec4 material_a;
+    uniform vec4 light_d;
+    uniform vec4 material_d;
+    uniform float shinniness;
+    uniform float tod;
+
+    varying vec2 f_texture;
+    varying vec3 f_lightdir;
+    varying vec3 f_eyedir;
+
+    void main(void) {
+
+        vec3 normal = normalize(2.0 * (texture2D(t_sample_norm, f_texture).rgb - 0.5));
+        vec3 lightdir = normalize(f_lightdir);
+        float lambert = max(dot(normal,lightdir),0.40);
+
+        vec3 eyedir = normalize(f_eyedir);
+        vec3 reflectdir = reflect(-lightdir,normal);
+        float specular = pow(max(dot(reflectdir,eyedir),0.0),shinniness) * lambert;
+
+        vec4 ambient = light_a * material_a;
+        vec4 diffuse = light_d * material_d * texture2D(t_sample,f_texture) * lambert;
+
+        if(tod > 12.0 && tod < 36.0) { gl_FragColor = ambient + diffuse + specular;
+        } else {
+            vec4 textureColor = texture2D(t_sample,f_texture);
+            gl_FragColor = vec4(textureColor.rgb * 0.4, textureColor.a);
+        }
+    }
+</script>
+
+<script id="road-vs" type="notjs">
+    attribute vec3 v_position;
+    attribute vec3 v_normal;
+    attribute vec2 v_texture;
+
+    varying vec2 f_texture;
+    varying float l_weight;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+
+    const float diffuse = 0.6;
+    void main(void) {
+        gl_Position = proj * view * model * vec4(v_position, 1.0);
+        f_texture = v_texture;
+        vec3 camera = vec3(0.0,0.0,1.0);
+        vec3 t_normal = normalize(mat3(view * model) * v_normal);
+        vec3 reflection = reflect(-lightdir,t_normal);
+        vec3 eye = normalize(camera - (mat3(view * model) * v_position));
+        float directionLightW = pow(max(dot(reflection,eye),0.0),5.0);
+        float ambient = 0.2 + .5*abs(directionLightW);
+        l_weight = ambient + diffuse * directionLightW;
+    }
+</script>
+<script id="road-fs" type="notjs">
+    precision highp float;
+
+    varying vec2 f_texture;
+    varying float l_weight;
+
+    uniform sampler2D t_sample;
+    uniform float tod;
+
+    void main(void) {
+        vec4 textureColor = texture2D(t_sample,f_texture);
+        if(tod > 12.0 && tod < 36.0) { gl_FragColor = vec4(textureColor.rgb * l_weight, textureColor.a); }
+        else { gl_FragColor = vec4(textureColor.rgb * 0.3, textureColor.a); }
+    }
+</script>
+
+<script id="landscape-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 v_position;
+    attribute vec3 v_normal;
+    attribute vec2 v_texture;
+
+    varying vec2 f_texture;
+    varying vec3 f_normal;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+
+    void main(void) {
+        f_texture = v_texture;
+        f_normal = normalize(mat3(view*model) * v_normal);
+        gl_Position = proj * view * model * vec4(v_position, 1.0);
+    }
+</script>
+<script id="landscape-fs" type="notjs">
+    precision highp float;
+
+    varying vec2 f_texture;
+    varying vec3 f_normal;
+
+    uniform sampler2D t_sample;
+    uniform vec3 lightdir;
+    uniform float tod;
+
+    void main(void) {
+        vec4 textureColor = texture2D(t_sample,f_texture);
+        float diffuse;
+        if(tod > 12.0 && tod < 36.0) { diffuse = .8; }
+        else { diffuse = .3; }
+        gl_FragColor = vec4(diffuse * textureColor.xyz, textureColor.a);
+    }
+</script>
+
+<script id="hospital-vs" type="not-js">
+    precision highp float;
+
+    attribute vec3 v_position;
+    attribute vec3 v_normal;
+
+    uniform vec3 w_color_in;
+    uniform vec3 b_color_in;
+
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 proj;
+
+    varying vec3 f_normal;
+    varying vec3 m_position;
+    varying vec3 w_color_out;
+    varying vec3 b_color_out;
+
+    void main() {
+        w_color_out = w_color_in;
+        b_color_out = b_color_in;
+        m_position = v_position;
+        f_normal = normalize(mat3(view*model) * v_normal);
+        gl_Position = proj * view * model * vec4(v_position, 1.0);
+    }
+</script>
+<script id="hospital-fs" type="notjs">
+    precision highp float;
+
+    uniform vec3 lightdir;
+    uniform float tod;
+    uniform float ambient;
+
+    varying vec3 f_normal;
+    varying vec3 m_position;
+    varying vec3 w_color_out;
+    varying vec3 b_color_out;
+
+    float pulse(float val, float dst) {
+        return floor(mod(val*dst,1.0)+.5);
+    }
+    void main() {
+        vec3 cpos = m_position;
+        const float d = 5.0;
+        float bright = pulse(cpos.x,3.75) + pulse(cpos.y,6.0) + pulse(cpos.z,3.75);
+        vec3 obj_color = mod(bright,3.0) > .1 ? b_color_out : w_color_out;
+        float diffuse;
+        if(tod > 12.0 && tod < 36.0) { diffuse = .5 + dot(f_normal,-lightdir);
+        } else {
+            if(ambient == 1.0) { diffuse = 0.7; }
+            else { diffuse = 0.3; }
+        }
+        gl_FragColor = vec4(diffuse * obj_color, 1.0);
+    }
+</script>
+
+<script id="skyscraper-vs" type="not-js">
+    precision highp float;
+
+    attribute vec3 v_position;
+    attribute vec3 v_normal;
+
+    uniform vec3 w_color_in;
+    uniform vec3 b_color_in;
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 proj;
+
+    varying vec3 f_normal;
+    varying vec3 m_position;
+    varying vec3 w_color_out;
+    varying vec3 b_color_out;
+
+    void main() {
+        w_color_out = w_color_in;
+        b_color_out = b_color_in;
+        m_position = v_position;
+        f_normal = normalize(mat3(view*model) * v_normal);
+        gl_Position = proj * view * model * vec4(v_position, 1.0);
+    }
+</script>
+<script id="skyscraper-fs" type="notjs">
+    precision highp float;
+
+    uniform vec3 lightdir;
+    uniform float tod;
+    uniform float window;
+
+    varying vec3 f_normal;
+    varying vec3 m_position;
+    varying vec3 w_color_out;
+    varying vec3 b_color_out;
+
+    float pulse(float val, float dst) {
+        return floor(mod(val*dst,1.0)+.5);
+    }
+    void main() {
+        vec3 cpos = m_position;
+        const float d = 5.0;
+        float bright = pulse(cpos.x,4.75) + pulse(cpos.y,3.0) + pulse(cpos.z,4.75);
+        vec3 obj_color;
+        float diffuse;
+        float amb = 0.7;
+        if(tod > 12.0 && tod < 36.0) {
+            diffuse = .5 + dot(f_normal,-lightdir);
+            obj_color = mod(bright,3.0) > .1 ? b_color_out * diffuse : w_color_out * diffuse;
+        } else {
+            diffuse = 0.3;
+            if(window == 1.0) { obj_color = mod(bright,3.0) > .1 ? b_color_out * diffuse : w_color_out * amb; }
+            else { obj_color = mod(bright,3.0) > .1 ? b_color_out * diffuse : w_color_out * diffuse; }
+        }
+        gl_FragColor = vec4(obj_color, 1.0);
+    }
+</script>
+
+<script id="Skybox-vs" type="notjs">
+    attribute vec3 v_position;
+    attribute vec3 v_normal;
+    attribute vec2 v_texture;
+    varying vec2 f_texture;
+    varying vec3 f_position;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform mat4 camera;
+    uniform float arcball;
+
+
+    void main(void) {
+        if(arcball == 1.0) {gl_Position = proj * view * model * vec4(v_position, 1.0);}
+        else {gl_Position = proj * camera * model * vec4(v_position, 1.0);}
+        f_texture = v_texture;
+        f_position = (model * vec4(v_position, 1.0)).xyz;
+    }
+</script>
+<script id="Skybox-fs" type="notjs">
+    precision highp float;
+
+    varying vec2 f_texture;
+    varying vec3 f_position;
+
+    uniform samplerCube t_sample_cube;
+    uniform float tod;
+
+    void main(void) {
+        float diffuse;
+        if(tod > 12.0 && tod < 36.0) { diffuse = 1.0; }
+        else { diffuse = 0.3; }
+        vec4 textureColor = textureCube(t_sample_cube, f_position);
+        gl_FragColor = vec4(diffuse * textureColor.xyz,1.0);
+    }
+</script>
+</html>

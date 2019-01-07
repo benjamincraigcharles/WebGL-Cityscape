@@ -1,5 +1,5 @@
 /**
- * Created by gleicher on 10/9/2015.
+ * Skeleton code created by gleicher on 10/9/2015.
  */
 
 /*
@@ -51,7 +51,6 @@ window.onload = function() {
     var uiMode = document.createElement("select");
     uiMode.innerHTML += "<option>ArcBall</option>";
     uiMode.innerHTML += "<option>Drive</option>";
-    uiMode.innerHTML += "<option>Fly</option>";
     uiMode.innerHTML += "</select>";
     controls.appendChild(uiMode);
 

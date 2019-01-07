@@ -1,5 +1,5 @@
 /**
- * Created by gleicher on 10/17/15.
+ * Skeleton code created by gleicher on 10/17/15.
  */
 var grobjects = grobjects || [];
 
@@ -37,7 +37,7 @@ var Copter = undefined,
     Copter.prototype.init = function(drawingState) {
         var gl = drawingState.gl;
 
-        // create the shaders once - for all cubes
+        // create the shaders once - for all helicopters
         if (!shaderProgram) {
             shaderProgram = twgl.createProgramInfo(gl, ["streetlight-vs", "streetlight-fs"]);
         }
@@ -110,8 +110,7 @@ var Copter = undefined,
             };
             backRotorBuffers = twgl.createBufferInfoFromArrays(drawingState.gl, backRotorArrays);
         }
-        // put the helicopter on a random helipad
-        // see the stuff on helicopter behavior to understand the thing
+        // select a helipad at random for the helicopter to land
         this.lastPad = randomHelipad();
         this.position = twgl.v3.add(this.lastPad.center(),[0,.5+this.lastPad.helipadAltitude,0]);
         this.state = 0; // landed
@@ -136,36 +135,36 @@ var Copter = undefined,
                 lightcolor: this.color, model: modelM
             });
 
-            //Copter Body
+            // Helicopter Body
             twgl.setBuffersAndAttributes(gl, shaderProgram, copterTopBodyBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, copterTopBodyBuffers);
 
-            //Copter Tail
+            // Helicopter Tail
             twgl.setBuffersAndAttributes(gl, shaderProgram, copterTailBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, copterTailBuffers);
 
-            //Copter Top Pole
+            // Helicopter Top Pole
             twgl.setBuffersAndAttributes(gl, shaderProgram, topPoleBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, topPoleBuffers);
 
-            //Copter Top Rotor
+            // Helicopter Top Rotor
             twgl.setBuffersAndAttributes(gl, shaderProgram, topRotorBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, topRotorBuffers);
 
-            //Copter Back Rotor
+            // Helicopter Back Rotor
             twgl.setBuffersAndAttributes(gl, shaderProgram, backRotorBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, backRotorBuffers);
 
-            //Copter Circle in rear
+            //Helicopter Circle in rear
             twgl.setBuffersAndAttributes(gl, shaderProgram, tailCircleBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, tailCircleBuffers);
 
-            //Bottom of Copter
+            // Helicopter of Copter
             twgl.setUniforms(shaderProgram, { lightcolor: this.bottomColor });
             twgl.setBuffersAndAttributes(gl, shaderProgram, copterBottomBodyBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, copterBottomBodyBuffers);
 
-            //Front of Copter
+            // Helicopter Nose
             twgl.m4.setTranslation(modelM, [this.position[0], this.position[1]+0.29, this.position[2]+0.05], modelM);
             twgl.setUniforms(shaderProgram, { lightcolor: this.noseColor, model: modelM });
             twgl.setBuffersAndAttributes(gl, shaderProgram, copterNoseBuffers);
@@ -177,7 +176,6 @@ var Copter = undefined,
 
             var modelMD = twgl.m4.rotationY(this.orientation);
             twgl.m4.setTranslation(modelMD, [this.position[0], this.position[1]+0.3, this.position[2]], modelMD);
-            // the drawing coce is straightforward - since twgl deals with the GL stuff for us
             var gl = drawingState.gl;
             gl.useProgram(shaderProgram.program);
             twgl.setUniforms(shaderProgram, {
@@ -199,10 +197,9 @@ var Copter = undefined,
             twgl.setBuffersAndAttributes(gl, shaderProgram, tailCircleBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, tailCircleBuffers);
 
-            // we make a model matrix to place the cube in the world
+            // creation of a model matrix to place the helicopter in the world
             var modelMA = twgl.m4.rotationY(this.orientation);
             twgl.m4.setTranslation(modelMA, this.position, modelMA);
-            // the drawing coce is straightforward - since twgl deals with the GL stuff for us
             var gl = drawingState.gl;
             gl.useProgram(shaderProgram.program);
             twgl.setUniforms(shaderProgram, {
@@ -228,7 +225,7 @@ var Copter = undefined,
             twgl.setBuffersAndAttributes(gl, shaderProgram, copterBottomBodyBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, copterBottomBodyBuffers);
 
-            // we make a model matrix to place the cube in the world
+            // creation of a model matrix to place the helicopter in the world
             var modelMB = twgl.m4.rotationY(-theta);
             twgl.m4.setTranslation(modelMB, this.position, modelMB);
             // the drawing coce is straightforward - since twgl deals with the GL stuff for us
@@ -241,7 +238,7 @@ var Copter = undefined,
             twgl.setBuffersAndAttributes(gl, shaderProgram, topRotorBuffers);
             twgl.drawBufferInfo(gl, gl.TRIANGLES, topRotorBuffers);
 
-            //BACK ROTOR
+            //Helicopter Rear Rotor
             var modelMC = twgl.m4.multiply(twgl.m4.rotationZ(-theta), twgl.m4.rotationY(this.orientation));
             twgl.m4.setTranslation(modelMC, this.position, modelMC);
             // the drawing coce is straightforward - since twgl deals with the GL stuff for us
@@ -259,7 +256,7 @@ var Copter = undefined,
         return this.position;
     };
 
-    // constructor for Helipad
+    // Constructor for helipad
     // note that anything that has a helipad and helipadAltitude key can be used
     Helipad = function Helipad(position) {
         this.name = "helipad"+padNumber++;
@@ -274,7 +271,7 @@ var Copter = undefined,
     Helipad.prototype.init = function(drawingState) {
         var gl=drawingState.gl;
 
-        // create the shaders once - for all cubes
+        // create the shaders once - for all helicopters
         if (!shaderProgram) {
             shaderProgram = twgl.createProgramInfo(gl, ["streetlight-vs", "streetlight-fs"]);
         }
@@ -514,13 +511,8 @@ var Copter = undefined,
     }
 })();
 
-// normally, I would put this into a "scene description" file, but having
-// it here means if this file isn't loaded, then there are no dangling
-// references to it
-
 // make the objects and put them into the world
 // note that the helipads float above the floor to avoid z-fighting
-//grobjects.push(new Copter());
 grobjects.push(new Helipad([-4.5,3.205,3.5]));
 grobjects.push(new Helipad([-100,3.205,-100]));
 grobjects.push(new Copter());
